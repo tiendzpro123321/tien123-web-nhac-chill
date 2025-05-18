@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌸 Nhạc Chill học bài !</title>
+
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --bg-light: linear-gradient(135deg, #f3f4f6, #e0e7ff);
+      --bg-dark: linear-gradient(135deg, #0f172a, #1e293b);
+      --bar-light: #6366f1;
+      --bar-dark: #60a5fa;
+    }
+
+    body {
+      background: var(--bg-light);
+      transition: background 1s ease;
+      overflow: hidden;
+    }
+
+    .dark body {
+      background: var(--bg-dark);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100px;
+      display: block;
+      border-radius: 0.5rem;
+    }
+
+    .glass {
+      backdrop-filter: blur(14px);
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .dark .glass {
+      background: rgba(17, 24, 39, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .slider::-webkit-slider-thumb {
+      background: #4f46e5;
+    }
+
+    .glow:hover {
+      box-shadow: 0 0 10px #6366f1;
+    }
+
+    .petal {
+      position: absolute;
+      top: -10px;
+      width: 20px;
+      height: 20px;
+      background-image: url('https://cdn-icons-png.flaticon.com/512/777/777086.png');
+      background-size: cover;
+      pointer-events: none;
+      animation: fall 10s linear infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="transition duration-1000 text-gray-800 dark:text-white">
+  <div class="min-h-screen flex flex-col items-center justify-center px-4 relative">
+    <!-- Hoa rơi -->
+    <div id="petal-container" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></div>
+
+    <div class="w-full max-w-md p-6 rounded-3xl glass shadow-xl space-y-4 z-10 transition duration-300">
+      <h1 class="text-3xl font-extrabold text-center">🌸 Chill Music Học Bài 🌸</h1>
+
+      <canvas id="visualizer"></canvas>
+      <audio id="audio" src="music1.mp3"></audio>
+
+      <div class="flex justify-between items-center text-2xl space-x-3 justify-center">
+  <div class="flex flex-col items-center">
+    <button id="prevBtn" class="hover:text-indigo-400 glow">⏮️</button>
+    <span class="text-xs mt-1">Bài trước</span>
+  </div>
+  <div class="flex flex-col items-center">
+    <button id="rewindBtn" class="hover:text-indigo-400 glow">⏪</button>
+    <span class="text-xs mt-1">Tua lùi 5s</span>
+  </div>
+  <div class="flex flex-col items-center">
+    <button id="playBtn" class="text-4xl hover:text-indigo-400 glow">▶️</button>
+    <span class="text-xs mt-1">Phát/Dừng</span>
+  </div>
+  <div class="flex flex-col items-center">
+    <button id="forwardBtn" class="hover:text-indigo-400 glow">⏩</button>
+    <span class="text-xs mt-1">Tua tới 5s</span>
+  </div>
+  <div class="flex flex-col items-center">
+    <button id="nextBtn" class="hover:text-indigo-400 glow">⏭️</button>
+    <span class="text-xs mt-1">Bài tiếp theo</span>
+  </div>
+</div>
+
+
+
+      <div class="flex justify-between items-center">
+        <label for="volume">🔊 Volume</label>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="1" class="slider accent-indigo-500 w-3/4">
+      </div>
+
+      <p id="songName" class="text-center font-medium">Playing: music1.mp3</p>
+
+      <div class="text-center space-x-2">
+        <button id="toggleLoop" class="px-4 py-2 bg-pink-500 text-white rounded-full hover:bg-pink-600 glow">
+          🔁 Loop: Off
+        </button>
+        <button id="toggleTheme" class="px-4 py-2 bg-indigo-500 text-white rounded-full hover:bg-indigo-600 glow">
+          🌗 Giao diện sáng/tối
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('playBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const volumeSlider = document.getElementById('volume');
+    const songName = document.getElementById('songName');
+    const toggleTheme = document.getElementById('toggleTheme');
+    const toggleLoop = document.getElementById('toggleLoop');
+    const canvas = document.getElementById('visualizer');
+    const ctx = canvas.getContext('2d');
+
+    const songs = ['music1.mp3', 'music2.mp3', 'music3.mp3'];
+    let currentSongIndex = 0;
+    let isPlaying = false;
+    let loopMode = false;
+
+    function loadSong(index) {
+      audio.src = songs[index];
+      songName.textContent = "Playing: " + songs[index];
+    }
+
+    function playSong() {
+      audio.play();
+      playBtn.textContent = '⏸️';
+      isPlaying = true;
+    }
+
+    function pauseSong() {
+      audio.pause();
+      playBtn.textContent = '▶️';
+      isPlaying = false;
+    }
+
+    playBtn.addEventListener('click', () => {
+      isPlaying ? pauseSong() : playSong();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      currentSongIndex = (currentSongIndex + 1) % songs.length;
+      loadSong(currentSongIndex);
+      playSong();
+    });
+
+    prevBtn.addEventListener('click', () => {
+      currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+      loadSong(currentSongIndex);
+      playSong();
+    });
+
+    volumeSlider.addEventListener('input', () => {
+      audio.volume = volumeSlider.value;
+    });
+
+    toggleTheme.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+    });
+
+    toggleLoop.addEventListener('click', () => {
+      loopMode = !loopMode;
+      audio.loop = loopMode;
+      toggleLoop.textContent = loopMode ? "🔁 Loop: On" : "🔁 Loop: Off";
+    });
+
+    // Tự chuyển bài nếu không loop
+    audio.addEventListener('ended', () => {
+      if (!loopMode) {
+        currentSongIndex = (currentSongIndex + 1) % songs.length;
+        loadSong(currentSongIndex);
+        playSong();
+      }
+    });
+
+    loadSong(currentSongIndex);
+
+    // Sóng nhạc
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    const source = audioCtx.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    analyser.fftSize = 256;
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    function draw() {
+      requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const bg = isDark ? '#1e293b' : '#e0e7ff';
+      const barColor = isDark ? getComputedStyle(document.documentElement).getPropertyValue('--bar-dark') : getComputedStyle(document.documentElement).getPropertyValue('--bar-light');
+
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i] / 2;
+        ctx.fillStyle = barColor;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        x += barWidth + 1;
+      }
+    }
+
+    draw();
+
+    // Hiệu ứng hoa rơi
+    function createPetal() {
+      const petal = document.createElement('div');
+      petal.classList.add('petal');
+      petal.style.left = Math.random() * 100 + 'vw';
+      petal.style.animationDuration = (Math.random() * 5 + 5) + 's';
+      document.getElementById('petal-container').appendChild(petal);
+      setTimeout(() => petal.remove(), 10000);
+    }
+
+    setInterval(createPetal, 500);
+    // Các đoạn xử lý khác...
+
+document.getElementById('rewindBtn').addEventListener('click', () => {
+  audio.currentTime = Math.max(0, audio.currentTime - 5);
+});
+
+document.getElementById('forwardBtn').addEventListener('click', () => {
+  audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+});
+
+loadSong(currentSongIndex);
+
+  </script>
+</body>
+</html>
